@@ -1,0 +1,22 @@
+[project]
+name = "nebula-mcp"
+version = "0.1.0"
+description = "提供编码规范、分层规范等开发工具的 MCP (Model Context Protocol) 服务器"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "mcp>=1.0.0",
+]
+
+[project.scripts]
+nebula-mcp = "main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = []
+
+[tool.hatch.build.targets.wheel]
+packages = ["main.py", "tools"]

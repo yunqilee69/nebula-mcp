@@ -1,4 +1,4 @@
-# Cludix MCP Server
+# nebula MCP Server
 
 提供编码规范、分层规范等开发工具的 MCP (Model Context Protocol) 服务器。
 
@@ -26,10 +26,12 @@
 ## 项目结构
 
 ```
-cludix-mcp/
+nebula-mcp/
 ├── .venv/                  # 虚拟环境
 ├── main.py                 # MCP 服务主程序
-├── requirements.txt        # Python 依赖
+├── pyproject.toml          # 项目配置和依赖管理
+├── .python-version         # Python 版本锁定
+├── uv.lock                 # UV 依赖锁定文件
 ├── Dockerfile              # Docker 构建文件
 ├── .dockerignore           # Docker 忽略文件
 ├── tools/                  # 工具模块
@@ -41,31 +43,44 @@ cludix-mcp/
 
 ## 快速开始
 
-### 1. 激活虚拟环境
+### 前置要求
+
+- Python 3.12 或更高版本
+- [uv](https://github.com/astral-sh/uv) - 快速的 Python 包管理器
+
+### 1. 安装 uv
 
 ```bash
-source .venv/bin/activate
+# Windows (PowerShell)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-### 2. 安装依赖
+### 2. 同步依赖
 
 ```bash
-pip install -r requirements.txt
+# 使用 uv 同步依赖（自动创建虚拟环境并安装依赖）
+uv sync
 ```
 
 ### 3. 启动服务
 
-**方式一：使用虚拟环境启动**
+**方式一：使用 uv 运行**
 
 ```bash
 # 激活虚拟环境
-source .venv/bin/activate
-
-# 安装依赖
-pip install -r requirements.txt
+uv shell
 
 # 启动服务
 python main.py
+```
+
+或者直接使用：
+
+```bash
+uv run python main.py
 ```
 
 服务将在 `http://127.0.0.1:8000` 启动。
@@ -74,17 +89,17 @@ python main.py
 
 ```bash
 # 构建镜像
-docker build -t cludix-mcp .
+docker build -t nebula-mcp .
 
 # 运行容器
-docker run -p 8000:8000 cludix-mcp
+docker run -p 8000:8000 nebula-mcp
 ```
 
 **方式三：指定主机和端口**
 
 ```bash
 # 监听所有接口，使用自定义端口
-python main.py --host 0.0.0.0 --port 8080
+uv run python main.py --host 0.0.0.0 --port 8080
 ```
 
 ### 4. 访问服务
@@ -171,17 +186,34 @@ curl -X POST http://localhost:8080/mcp \
 
 ## 开发说明
 
+### 添加新依赖
+
+```bash
+# 添加生产依赖
+uv add package_name
+
+# 添加开发依赖
+uv add --dev package_name
+```
+
 ### 添加新工具
 
 1. 在 `tools/` 目录下创建新的工具模块
-2. 在 `main.py` 中注册工具：
+2. 在 `tools/__init__.py` 中导入新工具类
+3. 实现 `BaseTool` 子类：
 
 ```python
-@server.tool()
-async def your_tool(param: str) -> str:
-    """工具描述"""
-    # 实现你的工具逻辑
-    return result
+from .base import BaseTool
+from mcp.server.fastmcp import FastMCP
+
+class YourTool(BaseTool):
+    @classmethod
+    def register(cls, mcp: FastMCP):
+        @mcp.tool()
+        async def your_tool(param: str) -> str:
+            """工具描述"""
+            # 实现你的工具逻辑
+            return result
 ```
 
 ### 扩展编码规范
@@ -221,10 +253,10 @@ uvicorn.run(app, host="0.0.0.0", port=YOUR_PORT)
 
 ## 技术栈
 
-- **Python 3.13+**
-- **FastAPI**: Web 框架
+- **Python 3.12+**
+- **uv**: 快速的 Python 包管理器
 - **MCP SDK**: Model Context Protocol SDK
-- **Uvicorn**: ASGI 服务器
+- **pyproject.toml**: 现代化 Python 项目配置标准
 
 ## 许可证
 

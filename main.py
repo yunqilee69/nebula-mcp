@@ -1,5 +1,5 @@
 """
-Cludix MCP Server
+nebula MCP Server
 提供编码规范、分层规范等开发工具的 MCP 服务
 """
 
@@ -8,7 +8,7 @@ from tools import register_all_tools
 
 # 创建 FastMCP 实例
 mcp = FastMCP(
-    name="cludix-tools",
+    name="nebula-tools",
     instructions="提供编码规范、分层架构规范等开发工具的 MCP 服务"
 )
 
