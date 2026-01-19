@@ -1,27 +1,55 @@
 # nebula MCP Server
 
-提供编码规范、分层规范等开发工具的 MCP (Model Context Protocol) 服务器。
+提供 Nebula 中台 Java 后端编码规范的 MCP (Model Context Protocol) 服务器。
 
 ## 功能特性
 
-### 1. 编码规范工具
-- **获取编码规范**: 查询多种编程语言的编码规范
-  - Python (PEP 8)
-  - Java
-  - JavaScript/TypeScript
-- **代码规范检查**: 检查代码是否符合编码规范，提供改进建议
+### Nebula 中台 Java 后端编码规范
 
-### 2. 分层架构规范工具
-- **获取架构规范**: 查询各种分层架构的规范说明
-  - MVC (Model-View-Controller)
-  - Clean Architecture (整洁架构)
-  - Hexagonal Architecture (六边形/端口适配器架构)
-  - DDD Layered Architecture (领域驱动设计分层)
-- **项目结构建议**: 根据项目类型推荐合适的目录结构
-  - Web API 项目
-  - 微服务项目
-  - 库/SDK 项目
-  - 单体应用
+提供完整的 Nebula 中台 Java 后端编码规范文档，包括：
+
+#### 1. 获取编码规范
+查询 Nebula 中台各个维度的编码规范：
+- **架构设计规范**：模块结构、分层架构、数据流转
+- **命名规范**：包命名、类命名、方法命名、字段命名
+- **Controller 层规范**：注解规范、方法设计、参数校验
+- **Service 层规范**：轻量级 DDD、事务管理、日志记录
+- **DAO 层规范**：Mapper 接口、返回类型、MyBatis Plus 使用
+- **数据转换规范**：MapStruct 使用、转换场景、复杂转换
+- **API 设计规范**：OpenAPI v3 注解、请求参数、响应体
+- **异常处理规范**：异常体系、错误码、全局异常处理
+- **常量和枚举规范**：常量类、枚举类、使用场景
+- **其他规范**：MyBatis Plus、缓存、代码风格
+
+#### 2. 命名规范检查
+检查代码是否符合 Nebula 命名规范：
+- 类命名检查
+- 方法命名检查
+- 字段命名检查
+- 包命名检查
+
+#### 3. 包结构建议
+根据模块类型推荐 Nebula 中台的包结构：
+- API 模块包结构
+- Core 模块包结构
+- Local 模块包结构
+- Remote 模块包结构
+- Service 模块包结构
+
+#### 4. 分层职责查询
+查询各层职责说明：
+- Controller 层职责
+- Service 层职责
+- DAO 层职责
+
+#### 5. 命名规范速查表
+快速查询各种命名规范：
+- 类命名速查表
+- 方法命名速查表
+- 字段命名速查表
+- 包命名速查表
+- 常量命名速查表
+- 枚举命名速查表
 
 ## 项目结构
 
@@ -36,8 +64,8 @@ nebula-mcp/
 ├── .dockerignore           # Docker 忽略文件
 ├── tools/                  # 工具模块
 │   ├── __init__.py
-│   ├── coding_standards.py    # 编码规范工具
-│   └── layer_standards.py     # 分层规范工具
+│   ├── base.py             # 工具基类
+│   └── nebula_standards.py  # Nebula 中台编码规范工具
 └── README.md              # 项目文档
 ```
 
@@ -110,66 +138,98 @@ uv run python main.py --host 0.0.0.0 --port 8080
 
 ## 使用示例
 
-### 获取 Python 编码规范
+### 获取架构设计规范
 
 ```bash
-curl -X POST http://localhost:8080/mcp \
+curl -X POST http://localhost:8000/mcp \
   -H "Content-Type: application/json" \
   -d '{
     "method": "tools/call",
     "params": {
-      "name": "get_coding_standard",
+      "name": "get_nebula_standard",
       "arguments": {
-        "language": "python"
+        "category": "architecture"
       }
     }
   }'
 ```
 
-### 检查代码规范
+### 获取命名规范
 
 ```bash
-curl -X POST http://localhost:8080/mcp \
+curl -X POST http://localhost:8000/mcp \
   -H "Content-Type: application/json" \
   -d '{
     "method": "tools/call",
     "params": {
-      "name": "check_code_convention",
+      "name": "get_nebula_standard",
       "arguments": {
-        "code": "def myFunction(): print(\"hello\")",
-        "language": "python"
+        "category": "naming"
       }
     }
   }'
 ```
 
-### 获取 Clean Architecture 规范
+### 检查类命名规范
 
 ```bash
-curl -X POST http://localhost:8080/mcp \
+curl -X POST http://localhost:8000/mcp \
   -H "Content-Type: application/json" \
   -d '{
     "method": "tools/call",
     "params": {
-      "name": "get_layer_standard",
+      "name": "check_naming_convention",
       "arguments": {
-        "layer_type": "clean_architecture"
+        "code": "public class user_entity extends BaseEntity { }",
+        "code_type": "class"
       }
     }
   }'
 ```
 
-### 获取微服务项目结构建议
+### 获取 Core 模块包结构建议
 
 ```bash
-curl -X POST http://localhost:8080/mcp \
+curl -X POST http://localhost:8000/mcp \
   -H "Content-Type: application/json" \
   -d '{
     "method": "tools/call",
     "params": {
-      "name": "suggest_layer_structure",
+      "name": "suggest_nebula_package_structure",
       "arguments": {
-        "project_type": "microservice"
+        "module_type": "core"
+      }
+    }
+  }'
+```
+
+### 获取 Service 层职责说明
+
+```bash
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "method": "tools/call",
+    "params": {
+      "name": "get_nebula_layer_responsibilities",
+      "arguments": {
+        "layer": "service"
+      }
+    }
+  }'
+```
+
+### 获取类命名规范速查表
+
+```bash
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "method": "tools/call",
+    "params": {
+      "name": "get_nebula_naming_convention",
+      "arguments": {
+        "convention_type": "class"
       }
     }
   }'
@@ -179,10 +239,11 @@ curl -X POST http://localhost:8080/mcp \
 
 | 工具名称 | 描述 | 参数 |
 |---------|------|------|
-| `get_coding_standard` | 获取指定语言的编码规范 | `language` (str) |
-| `check_code_convention` | 检查代码是否符合编码规范 | `code` (str), `language` (str) |
-| `get_layer_standard` | 获取分层架构规范 | `layer_type` (str) |
-| `suggest_layer_structure` | 根据项目类型建议目录结构 | `project_type` (str) |
+| `get_nebula_standard` | 获取 Nebula 中台指定类别的编码规范 | `category` (str) |
+| `check_naming_convention` | 检查代码是否符合 Nebula 命名规范 | `code` (str), `code_type` (str) |
+| `suggest_nebula_package_structure` | 根据模块类型建议 Nebula 中台的包结构 | `module_type` (str) |
+| `get_nebula_layer_responsibilities` | 获取 Nebula 中台分层职责说明 | `layer` (str) |
+| `get_nebula_naming_convention` | 获取 Nebula 中台命名规范速查表 | `convention_type` (str) |
 
 ## 开发说明
 
@@ -196,46 +257,19 @@ uv add package_name
 uv add --dev package_name
 ```
 
-### 添加新工具
+### 扩展 Nebula 编码规范
 
-1. 在 `tools/` 目录下创建新的工具模块
-2. 在 `tools/__init__.py` 中导入新工具类
-3. 实现 `BaseTool` 子类：
+编辑 `tools/nebula_standards.py`：
 
-```python
-from .base import BaseTool
-from mcp.server.fastmcp import FastMCP
+1. **添加新的规范类别**：
+   - 在对应的规范常量中添加内容（如 `ARCHITECTURE_STANDARD`）
+   - 在 `get_standard` 函数的 `standards_map` 中添加映射
 
-class YourTool(BaseTool):
-    @classmethod
-    def register(cls, mcp: FastMCP):
-        @mcp.tool()
-        async def your_tool(param: str) -> str:
-            """工具描述"""
-            # 实现你的工具逻辑
-            return result
-```
+2. **添加命名检查规则**：
+   - 在 `check_naming_convention` 函数中添加检查逻辑
 
-### 扩展编码规范
-
-编辑 `tools/coding_standards.py`，添加新的语言规范：
-
-```python
-YOUR_LANGUAGE_STANDARDS = """
-# 你的语言编码规范
-...
-"""
-
-# 在 get_standard 函数中添加映射
-standards_map = {
-    ...
-    "your_language": YOUR_LANGUAGE_STANDARDS,
-}
-```
-
-### 扩展架构规范
-
-编辑 `tools/layer_standards.py`，添加新的架构规范或项目类型建议。
+3. **添加新的工具**：
+   - 在 `NebulaStandardsTool` 类中添加新的工具方法
 
 ## 配置
 
@@ -244,7 +278,7 @@ standards_map = {
 编辑 `main.py` 最后一行：
 
 ```python
-uvicorn.run(app, host="0.0.0.0", port=YOUR_PORT)
+mcp.run(transport="streamable-http", host="0.0.0.0", port=YOUR_PORT)
 ```
 
 ### 添加环境变量
@@ -255,7 +289,7 @@ uvicorn.run(app, host="0.0.0.0", port=YOUR_PORT)
 
 - **Python 3.12+**
 - **uv**: 快速的 Python 包管理器
-- **MCP SDK**: Model Context Protocol SDK
+- **MCP SDK**: Model Context Protocol SDK (FastMCP)
 - **pyproject.toml**: 现代化 Python 项目配置标准
 
 ## 许可证

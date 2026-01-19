@@ -5,8 +5,7 @@
 
 from mcp.server.fastmcp import FastMCP
 from .base import BaseTool
-from .coding_standards import CodingStandardsTool
-from .layer_standards import LayerStandardsTool
+from .nebula_standards import NebulaStandardsTool
 
 
 def register_all_tools(mcp: FastMCP):
@@ -18,8 +17,7 @@ def register_all_tools(mcp: FastMCP):
     """
     # 导入所有工具类并注册
     tools = [
-        CodingStandardsTool,
-        LayerStandardsTool,
+        NebulaStandardsTool,
     ]
 
     for tool_cls in tools:
