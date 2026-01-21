@@ -28,7 +28,6 @@ env/
 .gitattributes
 
 # 文档
-*.md
 docs/
 
 # 测试相关
