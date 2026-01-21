@@ -134,8 +134,7 @@ uv run python main.py --host 0.0.0.0 --port 8080
 
 ### 4. 访问服务
 
-- SSE 端点: `http://localhost:8000/sse`
-- 消息端点: `http://localhost:8000/messages/`
+- Streamable HTTP 端点: `http://localhost:8000/mcp`
 - 根路径: `http://localhost:8000/`
 
 ## 使用示例
@@ -277,12 +276,24 @@ uv add --dev package_name
 
 ## 配置
 
-### 修改端口
+### 修改端口或传输协议
 
 编辑 `main.py` 最后一行：
 
 ```python
-mcp.run(transport="streamable-http", host="0.0.0.0", port=YOUR_PORT)
+# 使用 Streamable HTTP 传输（推荐）
+mcp.run(transport="streamable-http")
+
+# 或使用 SSE 传输（旧方式）
+# mcp.run(transport="sse")
+
+# 在 FastMCP 构造函数中修改端口
+mcp = FastMCP(
+    name="nebula-tools",
+    instructions="提供 Nebula 中台 Java 后端编码规范等开发工具的 MCP 服务",
+    host="0.0.0.0",
+    port=YOUR_PORT,  # 修改为所需端口
+)
 ```
 
 ### 添加环境变量

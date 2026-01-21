@@ -19,5 +19,5 @@ register_all_tools(mcp)
 
 
 if __name__ == "__main__":
-    # 运行服务器，使用 SSE 传输
-    mcp.run(transport="sse")
+    # 运行服务器，使用 Streamable HTTP 传输
+    mcp.run(transport="streamable-http")
