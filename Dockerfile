@@ -8,10 +8,11 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    UV_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
 
-# Install uv package manager
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+# Install uv package manager (using pip with China mirror)
+RUN pip install uv -i https://pypi.tuna.tsinghua.edu.cn/simple --no-cache-dir
 
 # Copy project files
 COPY pyproject.toml uv.lock ./
