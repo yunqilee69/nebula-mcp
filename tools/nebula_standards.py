@@ -2959,6 +2959,466 @@ private String username;
 
 ---
 
+### Model 类 JavaDoc 规范
+
+#### Model 子包分类
+
+| 包路径 | 是否需要 JavaDoc | 说明 |
+|--------|---------------|------|
+| `model/entity/` | ✅ 必须 | 实体类（对应数据库表） |
+| `model/dto/` | ✅ 必须 | 数据传输对象 |
+| `model/command/` | ✅ 必须 | 写命令（Service 入参） |
+| `model/query/` | ✅ 必须 | 读查询（Service 入参） |
+| `model/param/` | ✅ 必须 | DAO 查询参数 |
+| `model/req/` | ❌ 不需要 | Controller 请求参数（使用 `@Schema` 注解） |
+| `model/resp/` | ❌ 不需要 | Controller 响应参数（使用 `@Schema` 注解） |
+
+---
+
+#### Entity JavaDoc 规范
+
+Entity 类必须包含完整的 JavaDoc，说明类的作用和数据库表对应关系。
+
+**示例**：
+
+```java
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+import java.util.Date;
+
+/**
+ * 用户实体类
+ *
+ * <p>对应数据库表：cx_user</p>
+ *
+ * @author zhangsan
+ * @since 1.0.0
+ */
+@Data
+@TableName("cx_user")
+public class UserEntity {
+
+    /**
+     * 主键
+     */
+    private Long id;
+
+    /**
+     * 用户名
+     */
+    private String userName;
+
+    /**
+     * 邮箱
+     */
+    private String email;
+
+    /**
+     * 手机号
+     */
+    private String mobile;
+
+    /**
+     * 状态（1：活跃，0：非活跃）
+     */
+    private Integer status;
+
+    /**
+     * 创建时间
+     */
+    private Date createTime;
+
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
+
+    /**
+     * 是否删除（0：否，1：是）
+     */
+    private Boolean deleted;
+}
+```
+
+**规范说明**：
+- **类注释**：包含类描述、对应表名、作者、版本信息
+- **字段注释**：每个字段都必须有注释，说明字段用途
+- **枚举类型**：如果有枚举类型，需要列出所有可选值
+
+---
+
+#### DTO JavaDoc 规范
+
+DTO 类必须包含 JavaDoc，说明数据传输对象的作用。
+
+**示例**：
+
+```java
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import java.util.Date;
+
+/**
+ * 用户数据传输对象
+ *
+ * <p>用于 Service 层返回用户信息</p>
+ *
+ * @author zhangsan
+ * @since 1.0.0
+ */
+@Data
+@Schema(description = "用户数据传输对象")
+public class UserDto {
+
+    /**
+     * 用户 ID
+     */
+    @Schema(description = "用户 ID")
+    private Long id;
+
+    /**
+     * 用户名
+     */
+    @Schema(description = "用户名")
+    private String userName;
+
+    /**
+     * 邮箱
+     */
+    @Schema(description = "邮箱")
+    private String email;
+
+    /**
+     * 手机号
+     */
+    @Schema(description = "手机号")
+    private String mobile;
+
+    /**
+     * 状态（1：活跃，0：非活跃）
+     */
+    @Schema(description = "状态（1：活跃，0：非活跃）")
+    private Integer status;
+
+    /**
+     * 创建时间
+     */
+    @Schema(description = "创建时间")
+    private Date createTime;
+
+    /**
+     * 更新时间
+     */
+    @Schema(description = "更新时间")
+    private Date updateTime;
+}
+```
+
+---
+
+#### Command JavaDoc 规范
+
+Command 类必须包含 JavaDoc，说明写操作的参数含义。
+
+**示例**：
+
+```java
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+/**
+ * 创建用户命令
+ *
+ * <p>用于创建用户操作</p>
+ *
+ * @author zhangsan
+ * @since 1.0.0
+ */
+@Data
+@Schema(description = "创建用户命令")
+public class CreateUserCommand {
+
+    /**
+     * 用户名
+     *
+     * <p>长度：3-20</p>
+     * <p>唯一性：必须唯一</p>
+     */
+    @NotNull(message = "用户名不能为空")
+    @Size(min = 3, max = 20, message = "用户名长度3-20")
+    @Schema(description = "用户名", required = true, example = "zhangsan")
+    private String userName;
+
+    /**
+     * 邮箱
+     *
+     * <p>格式：有效的邮箱地址</p>
+     * <p>唯一性：必须唯一</p>
+     */
+    @NotNull(message = "邮箱不能为空")
+    @Email(message = "邮箱格式不正确")
+    @Schema(description = "邮箱", required = true, example = "zhangsan@example.com")
+    private String email;
+
+    /**
+     * 手机号
+     *
+     * <p>格式：11 位手机号</p>
+     * <p>可选性：可为空</p>
+     */
+    @Schema(description = "手机号", example = "13800138000")
+    private String mobile;
+
+    /**
+     * 状态
+     *
+     * <p>可选值：1（活跃），0（非活跃）</p>
+     * <p>默认值：1</p>
+     */
+    @Schema(description = "状态（1：活跃，0：非活跃）", example = "1")
+    private Integer status = 1;
+}
+```
+
+---
+
+#### Query JavaDoc 规范
+
+Query 类必须包含 JavaDoc，说明查询条件的含义。
+
+**示例**：
+
+```java
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import java.time.LocalDate;
+
+/**
+ * 获取用户详情查询
+ *
+ * <p>用于根据用户 ID 查询用户详情</p>
+ *
+ * @author zhangsan
+ * @since 1.0.0
+ */
+@Data
+@Schema(description = "获取用户详情查询")
+public class GetUserByIdQuery {
+
+    /**
+     * 用户 ID
+     *
+     * <p>必填性：必填</p>
+     * <p>格式：有效的雪花算法 ID</p>
+     */
+    @NotNull(message = "用户 ID 不能为空")
+    @Schema(description = "用户 ID", required = true, example = "1234567890123456789")
+    private Long id;
+}
+```
+
+**批量查询示例**：
+
+```java
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import java.time.LocalDate;
+
+/**
+ * 查询用户列表查询
+ *
+ * <p>用于根据条件查询用户列表</p>
+ *
+ * @author zhangsan
+ * @since 1.0.0
+ */
+@Data
+@Schema(description = "查询用户列表查询")
+public class ListUsersQuery {
+
+    /**
+     * 用户名
+     *
+     * <p>查询类型：模糊匹配</p>
+     * <p>可选性：可选</p>
+     */
+    @Schema(description = "用户名（模糊匹配）", example = "zhang")
+    private String userName;
+
+    /**
+     * 邮箱
+     *
+     * <p>查询类型：模糊匹配</p>
+     * <p>可选性：可选</p>
+     */
+    @Schema(description = "邮箱（模糊匹配）", example = "example.com")
+    private String email;
+
+    /**
+     * 状态
+     *
+     * <p>查询类型：精确匹配</p>
+     * <p>可选性：可选</p>
+     * <p>可选值：1（活跃），0（非活跃）</p>
+     */
+    @Schema(description = "状态（1：活跃，0：非活跃）", example = "1")
+    private Integer status;
+
+    /**
+     * 开始时间
+     *
+     * <p>查询类型：范围查询（>=）</p>
+     * <p>可选性：可选</p>
+     * <p>格式：yyyy-MM-dd</p>
+     */
+    @Schema(description = "开始时间（yyyy-MM-dd）", example = "2024-01-01")
+    private LocalDate startDate;
+
+    /**
+     * 结束时间
+     *
+     * <p>查询类型：范围查询（<=）</p>
+     * <p>可选性：可选</p>
+     * <p>格式：yyyy-MM-dd</p>
+     */
+    @Schema(description = "结束时间（yyyy-MM-dd）", example = "2024-12-31")
+    private LocalDate endDate;
+}
+```
+
+---
+
+#### Param JavaDoc 规范
+
+Param 类必须包含 JavaDoc，说明 DAO 查询参数的含义。
+
+**示例**：
+
+```java
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import com.nebula.base.mybatis.model.BasePageParam;
+import java.time.LocalDate;
+
+/**
+ * 用户查询参数
+ *
+ * <p>用于 DAO 层查询用户</p>
+ *
+ * @author zhangsan
+ * @since 1.0.0
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@Schema(description = "用户查询参数")
+public class UserQueryParam extends BasePageParam {
+
+    /**
+     * 用户名
+     *
+     * <p>查询类型：LIKE 模糊查询</p>
+     */
+    @Schema(description = "用户名")
+    private String userName;
+
+    /**
+     * 邮箱
+     *
+     * <p>查询类型：LIKE 模糊查询</p>
+     */
+    @Schema(description = "邮箱")
+    private String email;
+
+    /**
+     * 状态
+     *
+     * <p>查询类型：= 精确查询</p>
+     * <p>可选值：1（活跃），0（非活跃）</p>
+     */
+    @Schema(description = "状态（1：活跃，0：非活跃）")
+    private Integer status;
+
+    /**
+     * 开始时间
+     *
+     * <p>查询类型：>= 范围查询</p>
+     */
+    @Schema(description = "开始时间")
+    private LocalDate startDate;
+
+    /**
+     * 结束时间
+     *
+     * <p>查询类型：<= 范围查询</p>
+     */
+    @Schema(description = "结束时间")
+    private LocalDate endDate;
+
+    /**
+     * 用户名列表
+     *
+     * <p>查询类型：IN 查询</p>
+     * <p>使用场景：批量查询多个用户</p>
+     */
+    @Schema(description = "用户名列表")
+    private List<String> userNameList;
+}
+```
+
+---
+
+#### JavaDoc 规范总结
+
+**类注释规范**：
+
+| 元素 | 必填性 | 说明 | 示例 |
+|------|--------|------|------|
+| 类描述 | ✅ 必须 | 说明类的作用 | `用户实体类` |
+| 对应表名 | ✅ 必须（Entity） | 说明对应的数据库表 | `对应数据库表：cx_user` |
+| 用途说明 | ✅ 必须 | 说明类的使用场景 | `用于 Service 层返回用户信息` |
+| 作者 | ✅ 必须 | `@author` | `@author zhangsan` |
+| 版本 | ✅ 必须 | `@since` | `@since 1.0.0` |
+
+---
+
+**字段注释规范**：
+
+| 元素 | 必填性 | 说明 | 示例 |
+|------|--------|------|------|
+| 字段描述 | ✅ 必须 | 说明字段的用途 | `用户名` |
+| 长度限制 | ⚠️ 建议 | 说明长度限制 | `长度：3-20` |
+| 唯一性 | ⚠️ 建议 | 说明是否唯一 | `唯一性：必须唯一` |
+| 可选值 | ⚠️ 建议 | 列出可选值 | `可选值：1（活跃），0（非活跃）` |
+| 查询类型 | ⚠️ 建议（Query/Param） | 说明查询方式 | `查询类型：LIKE 模糊查询` |
+| 使用场景 | ⚠️ 建议 | 说明使用场景 | `使用场景：批量查询多个用户` |
+
+---
+
+**JavaDoc 注解使用**：
+
+```java
+/**
+ * 用户实体类
+ *
+ * <p>对应数据库表：cx_user</p>
+ * <p>支持用户的基本信息管理</p>
+ *
+ * @author zhangsan
+ * @since 1.0.0
+ */
+```
+
+- 使用 `<p>` 标签分段
+- 多行说明时使用多个 `<p>` 标签
+- 注解（`@author`、`@since`）放在最后
+
+---
+
 ## 测试规范
 
 ### 单元测试
@@ -3005,8 +3465,887 @@ public class UserServiceIntegrationTest {
 
 
 # ==============================================================================
+# 11. 数据库设计规范
+# ==============================================================================
+
+DATABASE_DESIGN_STANDARD = """
+# Nebula 中台数据库设计规范
+
+## 表命名规范
+
+### 基本规则
+
+- **表前缀**：所有中台表必须以 `cx_` 为前缀
+- **单数形式**：表名使用单数形式，不使用复数
+- **命名风格**：使用 snake_case（蛇形命名）
+- **业务含义**：表名应清晰表达业务含义
+
+### 表名示例
+
+| 表名 | 说明 | 是否符合规范 |
+|------|------|------------|
+| `cx_user` | 用户表 | ✅ 符合 |
+| `cx_order` | 订单表 | ✅ 符合 |
+| `cx_order_item` | 订单明细表 | ✅ 符合 |
+| `t_user` | 用户表 | ❌ 不符合（缺少 cx_ 前缀） |
+| `cx_users` | 用户表 | ❌ 不符合（使用复数形式） |
+| `user` | 用户表 | ❌ 不符合（缺少 cx_ 前缀） |
+
+---
+
+## 字段命名规范
+
+### 基本规则
+
+- **命名风格**：使用 snake_case（蛇形命名）
+- **小写字母**：全部使用小写字母
+- **下划线分隔**：使用下划线分隔单词
+- **业务含义**：字段名应清晰表达业务含义
+
+### 字段示例
+
+| 字段名 | 类型 | 说明 |
+|--------|------|------|
+| `id` | BIGINT | 主键 |
+| `user_name` | VARCHAR | 用户名 |
+| `email` | VARCHAR | 邮箱 |
+| `mobile` | VARCHAR | 手机号 |
+| `create_time` | DATETIME | 创建时间 |
+| `update_time` | DATETIME | 更新时间 |
+| `is_deleted` | TINYINT(1) | 是否删除 |
+
+---
+
+## 必选字段规范
+
+### 所有表必须包含的字段
+
+所有业务表必须包含以下字段：
+
+#### 1. 主键字段
+
+```sql
+`id` BIGINT NOT NULL COMMENT '主键'
+```
+
+- **类型**：BIGINT
+- **是否为空**：NOT NULL
+- **命名**：`id`
+- **取值**：使用雪花算法生成
+- **说明**：主键，base-mybatis 包中提供雪花算法支持
+
+---
+
+#### 2. 审计字段
+
+```sql
+`create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+`update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+```
+
+| 字段名 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `create_time` | DATETIME | CURRENT_TIMESTAMP | 创建时间，不可为空 |
+| `update_time` | DATETIME | CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 更新时间，不可为空，自动更新 |
+
+---
+
+#### 3. 逻辑删除字段（可选，但建议）
+
+```sql
+`is_deleted` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否删除（0：否，1：是）'
+```
+
+| 字段名 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `is_deleted` | TINYINT(1) | 0 | 是否删除，0 表示未删除，1 表示已删除 |
+
+---
+
+## 完整建表示例
+
+### 标准建表语句
+
+```sql
+CREATE TABLE `cx_user` (
+  `id` BIGINT NOT NULL COMMENT '主键',
+  `user_name` VARCHAR(50) NOT NULL COMMENT '用户名',
+  `email` VARCHAR(100) NOT NULL COMMENT '邮箱',
+  `mobile` VARCHAR(20) COMMENT '手机号',
+  `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态（1：活跃，0：非活跃）',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否删除（0：否，1：是）',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_name` (`user_name`),
+  UNIQUE KEY `uk_email` (`email`),
+  KEY `idx_mobile` (`mobile`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+```
+
+---
+
+## 主键规范
+
+### 使用雪花算法
+
+Nebula 中台使用雪花算法生成主键 ID，由 `base-mybatis` 包提供支持。
+
+#### 雪花算法特点
+
+- 全局唯一
+- 趋势递增
+- 高性能
+- 分布式友好
+
+#### 配置雪花算法
+
+在 `application.yml` 中配置雪花算法的集群 ID 和节点 ID：
+
+```yaml
+mybatis-plus:
+  global-config:
+    db-config:
+      id-type: ASSIGN_ID  # 使用雪花算法
+
+nebula:
+  snowflake:
+    cluster-id: 1        # 集群 ID（1-31）
+    node-id: 1           # 节点 ID（1-31）
+```
+
+#### 参数说明
+
+| 参数 | 说明 | 取值范围 | 必填 |
+|------|------|---------|------|
+| `cluster-id` | 集群 ID | 1-31 | 是 |
+| `node-id` | 节点 ID | 1-31 | 是 |
+
+**注意**：同一集群内，所有节点的 `cluster-id` 必须相同，但 `node-id` 必须唯一。
+
+---
+
+## 字段类型规范
+
+### 字符串类型
+
+| 类型 | 长度 | 使用场景 | 示例 |
+|------|------|---------|------|
+| VARCHAR(50) | 50 | 短字符串 | 用户名 |
+| VARCHAR(100) | 100 | 中等长度字符串 | 邮箱 |
+| VARCHAR(500) | 500 | 长字符串 | 地址 |
+| TEXT | 65535 | 超长文本 | 备注信息 |
+
+---
+
+### 数值类型
+
+| 类型 | 说明 | 使用场景 | 示例 |
+|------|------|---------|------|
+| BIGINT | 大整数 | 主键 ID、金额（分） | `id`、`amount` |
+| INT | 整数 | 数量、状态、类型 | `count`、`status` |
+| TINYINT | 小整数 | 布尔值、枚举值 | `is_deleted`、`status` |
+| DECIMAL(10,2) | 小数 | 金额（元） | `price` |
+
+---
+
+### 日期时间类型
+
+| 类型 | 说明 | 使用场景 | 示例 |
+|------|------|---------|------|
+| DATETIME | 日期时间 | 时间戳 | `create_time`、`update_time` |
+| DATE | 日期 | 日期 | `birthday` |
+
+---
+
+## 索引规范
+
+### 索引命名规范
+
+| 索引类型 | 命名规则 | 示例 |
+|---------|---------|------|
+| 主键索引 | `PRIMARY` | `PRIMARY KEY (id)` |
+| 唯一索引 | `uk_字段名` | `uk_user_name` |
+| 普通索引 | `idx_字段名` | `idx_mobile` |
+| 联合索引 | `idx_字段1_字段2` | `idx_user_name_status` |
+
+---
+
+### 索引设计原则
+
+1. **主键索引**：所有表必须有主键索引
+2. **唯一索引**：需要唯一约束的字段（如用户名、邮箱）
+3. **普通索引**：频繁查询的字段
+4. **联合索引**：经常一起查询的多个字段（遵循最左前缀原则）
+5. **避免过多索引**：索引过多会影响写入性能
+
+---
+
+### 索引示例
+
+```sql
+-- 主键索引
+PRIMARY KEY (`id`)
+
+-- 唯一索引
+UNIQUE KEY `uk_user_name` (`user_name`)
+UNIQUE KEY `uk_email` (`email`)
+
+-- 普通索引
+KEY `idx_mobile` (`mobile`)
+KEY `idx_create_time` (`create_time`)
+
+-- 联合索引
+KEY `idx_user_name_status` (`user_name`, `status`)
+```
+
+---
+
+## Entity 类规范
+
+### 基本规则
+
+Entity 类名使用 PascalCase，以 `Entity` 结尾。
+
+### Entity 示例
+
+```java
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+import java.util.Date;
+
+@Data
+@TableName("cx_user")
+public class UserEntity {
+
+    /**
+     * 主键（使用雪花算法）
+     */
+    @TableId(type = IdType.ASSIGN_ID)
+    private Long id;
+
+    /**
+     * 用户名
+     */
+    private String userName;
+
+    /**
+     * 邮箱
+     */
+    private String email;
+
+    /**
+     * 手机号
+     */
+    private String mobile;
+
+    /**
+     * 状态（1：活跃，0：非活跃）
+     */
+    private Integer status;
+
+    /**
+     * 创建时间
+     */
+    private Date createTime;
+
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
+
+    /**
+     * 是否删除（0：否，1：是）
+     */
+    @TableField("is_deleted")
+    private Boolean deleted;
+}
+```
+
+---
+
+## MyBatis Plus 自动填充配置
+
+### 配置自动填充
+
+在 `config/MyBatisPlusConfig.java` 中配置字段自动填充：
+
+```java
+import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import org.apache.ibatis.reflection.MetaObject;
+import org.springframework.stereotype.Component;
+import java.util.Date;
+
+@Component
+public class MyMetaObjectHandler implements MetaObjectHandler {
+
+    @Override
+    public void insertFill(MetaObject metaObject) {
+        this.strictInsertFill(metaObject, "createTime", Date.class, new Date());
+        this.strictInsertFill(metaObject, "updateTime", Date.class, new Date());
+    }
+
+    @Override
+    public void updateFill(MetaObject metaObject) {
+        this.strictUpdateFill(metaObject, "updateTime", Date.class, new Date());
+    }
+}
+```
+
+---
+
+## 数据库设计最佳实践
+
+### 1. 使用合适的字段类型
+
+```sql
+-- ❌ 错误：使用 VARCHAR 存储金额
+`price` VARCHAR(20) NOT NULL COMMENT '价格'
+
+-- ✅ 正确：使用 DECIMAL 存储金额
+`price` DECIMAL(10,2) NOT NULL COMMENT '价格'
+```
+
+---
+
+### 2. 避免使用 NULL
+
+```sql
+-- ❌ 错误：允许 NULL
+`user_name` VARCHAR(50) NULL COMMENT '用户名'
+
+-- ✅ 正确：设置默认值
+`user_name` VARCHAR(50) NOT NULL DEFAULT '' COMMENT '用户名'
+```
+
+---
+
+### 3. 使用逻辑删除
+
+```sql
+-- ❌ 错误：物理删除
+DELETE FROM cx_user WHERE id = 12345;
+
+-- ✅ 正确：逻辑删除
+UPDATE cx_user SET is_deleted = 1 WHERE id = 12345;
+```
+
+---
+
+### 4. 使用注释
+
+```sql
+-- ✅ 正确：所有字段和表都添加注释
+CREATE TABLE `cx_user` (
+  `id` BIGINT NOT NULL COMMENT '主键',
+  `user_name` VARCHAR(50) NOT NULL COMMENT '用户名',
+  ...
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+```
+
+---
+
+### 5. 设置字符集
+
+```sql
+-- ✅ 正确：使用 utf8mb4 字符集
+ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+```
+"""
+
+
+# ==============================================================================
+# 12. 配置管理规范
+# ==============================================================================
+
+CONFIGURATION_MANAGEMENT_STANDARD = """
+# Nebula 中台配置管理规范
+
+## 配置文件结构
+
+### 目录结构
+
+```
+src/main/resources/
+├── application.yml              # 通用配置
+├── application-dev.yml          # 开发环境配置
+├── application-test.yml         # 测试环境配置
+├── application-prod.yml         # 生产环境配置
+├── logback.xml                  # 日志配置
+└── banner.txt                   # 启动横幅
+```
+
+---
+
+### 环境配置切换
+
+在 `application.yml` 中激活对应的环境配置：
+
+```yaml
+spring:
+  profiles:
+    active: dev  # dev、test、prod
+```
+
+---
+
+## 通用配置（application.yml）
+
+### 基础配置
+
+```yaml
+spring:
+  application:
+    name: nebula-uaa-service
+
+  profiles:
+    active: @profiles.active@  # 使用 Maven profile 或环境变量
+
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+    default-property-inclusion: non_null
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+
+logging:
+  level:
+    root: INFO
+    com.nebula: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+```
+
+---
+
+## 环境配置规范
+
+### 开发环境（application-dev.yml）
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/nebula_dev?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  redis:
+    host: localhost
+    port: 6379
+    password:
+    database: 0
+
+nebula:
+  snowflake:
+    cluster-id: 1
+    node-id: 1
+
+logging:
+  level:
+    com.nebula: DEBUG
+    org.springframework: DEBUG
+```
+
+---
+
+### 测试环境（application-test.yml）
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://test-db.example.com:3306/nebula_test?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=GMT%2B8
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  redis:
+    host: test-redis.example.com
+    port: 6379
+    password: ${REDIS_PASSWORD}
+    database: 0
+
+nebula:
+  snowflake:
+    cluster-id: 2
+    node-id: 1
+
+logging:
+  level:
+    com.nebula: INFO
+    org.springframework: WARN
+```
+
+---
+
+### 生产环境（application-prod.yml）
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://prod-db.example.com:3306/nebula_prod?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=GMT%2B8
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  redis:
+    host: prod-redis.example.com
+    port: 6379
+    password: ${REDIS_PASSWORD}
+    database: 0
+    lettuce:
+      pool:
+        max-active: 20
+        max-idle: 10
+        min-idle: 5
+
+nebula:
+  snowflake:
+    cluster-id: 3
+    node-id: 1
+
+logging:
+  level:
+    com.nebula: WARN
+    org.springframework: WARN
+  file:
+    name: /var/log/nebula/nebula-uaa-service.log
+    max-size: 100MB
+    max-history: 30
+```
+
+---
+
+## 敏感配置管理
+
+### 使用环境变量
+
+生产环境的敏感配置（数据库密码、Redis 密码、第三方密钥等）必须通过环境变量传递，不能硬编码在配置文件中。
+
+#### 环境变量示例
+
+```bash
+# 数据库配置
+export DB_USERNAME=nebula_prod
+export DB_PASSWORD=your_secure_password
+
+# Redis 配置
+export REDIS_PASSWORD=your_redis_password
+
+# 第三方密钥
+export ALIYUN_ACCESS_KEY=your_access_key
+export ALIYUN_ACCESS_SECRET=your_access_secret
+```
+
+#### 配置文件中使用环境变量
+
+```yaml
+spring:
+  datasource:
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  redis:
+    password: ${REDIS_PASSWORD}
+```
+
+---
+
+### 使用 Jasypt 加密（可选）
+
+对于必须写入配置文件的敏感信息，使用 Jasypt 加密。
+
+#### 添加依赖
+
+```xml
+<dependency>
+    <groupId>com.github.ulisesbocchio</groupId>
+    <artifactId>jasypt-spring-boot-starter</artifactId>
+    <version>3.0.5</version>
+</dependency>
+```
+
+#### 配置加密密码
+
+```yaml
+jasypt:
+  encryptor:
+    password: ${JASYPT_PASSWORD}  # 通过环境变量传递
+```
+
+#### 加密敏感信息
+
+使用 Jasypt 工具加密敏感信息：
+
+```bash
+java -cp jasypt-1.9.3.jar org.jasypt.intf.cli.JasyptPBEStringEncryptionCLI \
+  input="your_password" \
+  password=${JASYPT_PASSWORD} \
+  algorithm=PBEWithMD5AndDES
+```
+
+#### 配置文件中使用加密信息
+
+```yaml
+spring:
+  datasource:
+    password: ENC(加密后的密文)
+```
+
+---
+
+## MyBatis Plus 配置规范
+
+### 基础配置
+
+```yaml
+mybatis-plus:
+  configuration:
+    # 驼峰命名自动映射
+    map-underscore-to-camel-case: true
+    # 日志输出
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    db-config:
+      # 主键类型（雪花算法）
+      id-type: ASSIGN_ID
+      # 逻辑删除字段
+      logic-delete-field: isDeleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+    banner: false  # 关闭 MyBatis Plus 的 banner
+  # Mapper XML 扫描路径
+  mapper-locations: classpath*:/mapper/**/*.xml
+```
+
+---
+
+## 雪花算法配置
+
+### 配置示例
+
+```yaml
+nebula:
+  snowflake:
+    cluster-id: 1  # 集群 ID（1-31）
+    node-id: 1     # 节点 ID（1-31）
+```
+
+---
+
+### 参数说明
+
+| 参数 | 说明 | 取值范围 | 必填 |
+|------|------|---------|------|
+| `cluster-id` | 集群 ID | 1-31 | 是 |
+| `node-id` | 节点 ID | 1-31 | 是 |
+
+---
+
+### 集群节点规划示例
+
+| 环境 | 集群 ID | 节点 ID | 节点名称 |
+|------|---------|---------|---------|
+| 开发环境 | 1 | 1 | dev-node1 |
+| 测试环境 | 2 | 1 | test-node1 |
+| 测试环境 | 2 | 2 | test-node2 |
+| 生产环境 | 3 | 1 | prod-node1 |
+| 生产环境 | 3 | 2 | prod-node2 |
+| 生产环境 | 3 | 3 | prod-node3 |
+
+**注意**：同一集群内，所有节点的 `cluster-id` 必须相同，但 `node-id` 必须唯一。
+
+---
+
+## 缓存配置规范
+
+### Redis 配置
+
+```yaml
+spring:
+  redis:
+    host: localhost
+    port: 6379
+    password:
+    database: 0
+    timeout: 3000
+    lettuce:
+      pool:
+        max-active: 20
+        max-idle: 10
+        min-idle: 5
+
+nebula:
+  cache:
+    type: redis  # 或 caffeine
+    redis:
+      key-prefix: nebula:
+      expire-time: 3600  # 默认过期时间（秒）
+```
+
+---
+
+### Caffeine 配置
+
+```yaml
+nebula:
+  cache:
+    type: caffeine
+    caffeine:
+      maximum-size: 1000
+      expire-after-write: 3600
+```
+
+---
+
+## 日志配置规范
+
+### Logback 配置（logback.xml）
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 控制台输出 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 文件输出 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/application.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/application.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 日志级别 -->
+    <logger name="com.nebula" level="DEBUG"/>
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.hibernate" level="WARN"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>
+```
+
+---
+
+## 配置管理最佳实践
+
+### 1. 使用 Profile 区分环境
+
+```yaml
+spring:
+  profiles:
+    active: dev  # 使用 Maven profile 或环境变量
+```
+
+---
+
+### 2. 敏感信息使用环境变量
+
+```yaml
+spring:
+  datasource:
+    password: ${DB_PASSWORD}  # ✅ 正确
+    password: my_password      # ❌ 错误
+```
+
+---
+
+### 3. 合理配置连接池
+
+```yaml
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 20      # 最大连接数
+      minimum-idle: 5           # 最小空闲连接数
+      connection-timeout: 30000  # 连接超时时间（毫秒）
+      idle-timeout: 600000       # 空闲连接超时时间（毫秒）
+      max-lifetime: 1800000      # 连接最大存活时间（毫秒）
+```
+
+---
+
+### 4. 配置雪花算法
+
+```yaml
+nebula:
+  snowflake:
+    cluster-id: 1  # 集群 ID（1-31）
+    node-id: 1     # 节点 ID（1-31）
+```
+
+**注意**：同一集群内，`cluster-id` 必须相同，`node-id` 必须唯一。
+
+---
+
+### 5. 配置日志级别
+
+| 环境 | Root 级别 | Nebula 级别 | Spring 级别 |
+|------|---------|------------|------------|
+| 开发环境 | DEBUG | DEBUG | DEBUG |
+| 测试环境 | INFO | DEBUG | WARN |
+| 生产环境 | WARN | WARN | WARN |
+
+---
+
+### 6. 配置文件注释
+
+```yaml
+# 应用名称
+spring:
+  application:
+    name: nebula-uaa-service
+
+# 服务端口
+server:
+  port: 8080
+
+# 雪花算法配置
+nebula:
+  snowflake:
+    cluster-id: 1  # 集群 ID（1-31）
+    node-id: 1     # 节点 ID（1-31）
+```
+"""
+
+
+# ==============================================================================
 # MCP 工具函数
 # ==============================================================================
+
 
 async def get_standard(category: str) -> str:
     """
@@ -3034,6 +4373,10 @@ async def get_standard(category: str) -> str:
         "constant": CONSTANT_ENUM_STANDARD,
         "enum": CONSTANT_ENUM_STANDARD,
         "other": OTHER_STANDARD,
+        "database": DATABASE_DESIGN_STANDARD,
+        "db": DATABASE_DESIGN_STANDARD,
+        "config": CONFIGURATION_MANAGEMENT_STANDARD,
+        "configuration": CONFIGURATION_MANAGEMENT_STANDARD,
     }
 
     standard = standards_map.get(category)
@@ -3052,8 +4395,12 @@ async def get_standard(category: str) -> str:
             "exception (异常处理规范)",
             "constant/enum (常量和枚举规范)",
             "other (其他规范)",
+            "database (数据库设计规范)",
+            "config/configuration (配置管理规范)",
         ]
-        return f"暂时不支持 '{category}' 规范。\n\n支持的规范：\n" + "\n".join(f"- {item}" for item in available)
+        return f"暂时不支持 '{category}' 规范。\n\n支持的规范：\n" + "\n".join(
+            f"- {item}" for item in available
+        )
 
 
 async def check_naming_convention(code: str, code_type: str) -> str:
@@ -3081,25 +4428,33 @@ async def check_naming_convention(code: str, code_type: str) -> str:
             if line.startswith("class ") and line.endswith("Entity {"):
                 class_name = line.split(" ")[1].replace("Entity", "")
                 if not class_name[0].isupper() or "_" in class_name:
-                    issues.append(f"Entity 类名 '{line.split(' ')[1]}' 应使用 PascalCase")
+                    issues.append(
+                        f"Entity 类名 '{line.split(' ')[1]}' 应使用 PascalCase"
+                    )
 
             # 检查 Mapper
             if line.startswith("public interface ") and line.endswith("Mapper {"):
                 class_name = line.split(" ")[3].replace("Mapper", "")
                 if not class_name[0].isupper() or "_" in class_name:
-                    issues.append(f"Mapper 接口名 '{line.split(' ')[3]}' 应使用 PascalCase")
+                    issues.append(
+                        f"Mapper 接口名 '{line.split(' ')[3]}' 应使用 PascalCase"
+                    )
 
             # 检查 Service 接口
             if line.startswith("public interface I") and "Service {":
                 class_name = line.split(" ")[3].replace("Service", "")
                 if not class_name[0].isupper():
-                    issues.append(f"Service 接口名 '{line.split(' ')[3]}' 应使用 I{PascalCase}Service")
+                    issues.append(
+                        f"Service 接口名 '{line.split(' ')[3]}' 应使用 I{{业务名称}}Service 格式"
+                    )
 
             # 检查 Service 实现
             if "implements I" in line and line.endswith("ServiceImpl {"):
                 impl_name = line.split("implements ")[1].split(" {")[0].strip()
                 if not impl_name.endswith("ServiceImpl"):
-                    issues.append(f"Service 实现类名应使用 {PascalCase}ServiceImpl")
+                    issues.append(
+                        f"Service 实现类名应使用 {{业务名称}}ServiceImpl 格式"
+                    )
 
     # 方法命名检查
     elif code_type == "method":
@@ -3113,16 +4468,26 @@ async def check_naming_convention(code: str, code_type: str) -> str:
 
                 # find* 返回 List
                 if method_name.startswith("find") and "List<" not in line:
-                    issues.append(f"Mapper 方法 '{method_name}' 以 find 开头，应返回 List")
+                    issues.append(
+                        f"Mapper 方法 '{method_name}' 以 find 开头，应返回 List"
+                    )
 
                 # get* 返回单个
-                if method_name.startswith("get") and "<" not in line and line.split(" ")[1] != "List":
+                if (
+                    method_name.startswith("get")
+                    and "<" not in line
+                    and line.split(" ")[1] != "List"
+                ):
                     if "Optional" not in line:
-                        issues.append(f"Mapper 方法 '{method_name}' 以 get 开头，应返回 Optional 或单个对象")
+                        issues.append(
+                            f"Mapper 方法 '{method_name}' 以 get 开头，应返回 Optional 或单个对象"
+                        )
 
                 # page* 返回 Page
                 if method_name.startswith("page") and "Page<" not in line:
-                    issues.append(f"Mapper 方法 '{method_name}' 以 page 开头，应返回 Page")
+                    issues.append(
+                        f"Mapper 方法 '{method_name}' 以 page 开头，应返回 Page"
+                    )
 
     # 字段命名检查
     elif code_type == "field":
@@ -3459,6 +4824,155 @@ public interface UserMapper extends BaseMapper<UserEntity> {
 
 请指定层名称以获取详细的职责说明。
 """
+
+
+async def check_table_name(table_name: str) -> str:
+    """
+    检查数据库表名是否符合 Nebula 中台规范
+
+    Args:
+        table_name: 表名
+
+    Returns:
+        检查结果和建议
+    """
+    table_name = table_name.strip()
+    issues = []
+    suggestions = []
+
+    # 检查表前缀
+    if not table_name.startswith("cx_"):
+        issues.append(f"表名 '{table_name}' 缺少 'cx_' 前缀")
+
+    # 检查是否为复数形式（简单判断）
+    base_name = table_name.replace("cx_", "")
+    if (
+        base_name.endswith("s")
+        and not base_name.endswith("ss")
+        and not base_name.endswith("us")
+    ):
+        issues.append(f"表名 '{table_name}' 使用了复数形式，应使用单数形式")
+
+    # 检查是否使用蛇形命名
+    if any(c.isupper() for c in base_name):
+        issues.append(
+            f"表名 '{table_name}' 使用了大写字母，应使用蛇形命名（snake_case）"
+        )
+
+    # 检查必选字段
+    issues.append(f"表 '{table_name}' 必须包含以下字段：id, create_time, update_time")
+
+    # 生成建议
+    if len(issues) == 1 and issues[0].startswith("表"):
+        suggestions.append("✅ 表名符合 Nebula 中台规范！")
+        suggestions.append("\n📋 请确保表包含必选字段：id, create_time, update_time")
+    else:
+        suggestions.append(f"发现 {len(issues)} 个问题：")
+        suggestions.extend(issues)
+        suggestions.append("\n💡 建议：")
+        suggestions.append("- 表名必须以 'cx_' 开头")
+        suggestions.append("- 表名使用单数形式")
+        suggestions.append("- 表名使用蛇形命名（snake_case）")
+        suggestions.append("- 所有表必须包含 id, create_time, update_time 字段")
+
+    return "\n".join(suggestions)
+
+
+async def check_configuration(config_content: str, config_type: str) -> str:
+    """
+    检查配置文件是否符合 Nebula 中台规范
+
+    Args:
+        config_content: 配置内容
+        config_type: 配置类型（yml, properties）
+
+    Returns:
+        检查结果和建议
+    """
+    config_type = config_type.lower().strip()
+    issues = []
+    suggestions = []
+
+    # 检查 YAML 配置
+    if config_type == "yml":
+        # 检查是否配置了雪花算法
+        if "snowflake:" not in config_content.lower():
+            issues.append("配置中缺少雪花算法配置（nebula.snowflake）")
+
+        # 检查是否配置了主键类型
+        if "id-type" not in config_content:
+            issues.append("MyBatis Plus 配置中缺少主键类型设置（id-type: ASSIGN_ID）")
+
+        # 检查是否配置了驼峰命名转换
+        if "map-underscore-to-camel-case" not in config_content:
+            issues.append(
+                "MyBatis Plus 配置中缺少驼峰命名转换（map-underscore-to-camel-case）"
+            )
+
+        # 检查是否使用环境变量
+        if "password:" in config_content.lower():
+            lines = config_content.split("\n")
+            for line in lines:
+                if (
+                    "password:" in line.lower()
+                    and not "${" in line
+                    and not "ENC(" in line
+                ):
+                    issues.append(
+                        "敏感信息使用明文，应使用环境变量（${PASSWORD}）或加密（ENC(密文)）"
+                    )
+
+    # 检查 Properties 配置
+    elif config_type == "properties":
+        # 检查是否配置了雪花算法
+        if "nebula.snowflake" not in config_content:
+            issues.append(
+                "配置中缺少雪花算法配置（nebula.snowflake.cluster-id 和 nebula.snowflake.node-id）"
+            )
+
+        # 检查是否配置了主键类型
+        if "mybatis-plus.global-config.db-config.id-type" not in config_content:
+            issues.append("MyBatis Plus 配置中缺少主键类型设置（ASSIGN_ID）")
+
+        # 检查是否使用环境变量
+        if "password" in config_content.lower():
+            lines = config_content.split("\n")
+            for line in lines:
+                if "password" in line.lower() and "${" not in line:
+                    issues.append("敏感信息使用明文，应使用环境变量（${PASSWORD}）")
+
+    else:
+        return f"""
+# Nebula 中台配置文件检查
+
+配置类型 "{config_type}" 未识别。
+
+## 支持的配置类型：
+1. **yml** - YAML 配置文件
+2. **properties** - Properties 配置文件
+
+请指定配置类型以进行检查。
+"""
+
+    # 生成建议
+    if not issues:
+        suggestions.append("✅ 配置文件符合 Nebula 中台规范！")
+    else:
+        suggestions.append(f"发现 {len(issues)} 个问题：")
+        suggestions.extend(issues)
+        suggestions.append("\n💡 建议：")
+        suggestions.append(
+            "- 配置雪花算法：nebula.snowflake.cluster-id 和 nebula.snowflake.node-id"
+        )
+        suggestions.append(
+            "- 配置主键类型：mybatis-plus.global-config.db-config.id-type: ASSIGN_ID"
+        )
+        suggestions.append(
+            "- 配置驼峰命名转换：mybatis-plus.configuration.map-underscore-to-camel-case: true"
+        )
+        suggestions.append("- 敏感信息使用环境变量或加密")
+
+    return "\n".join(suggestions)
 
 
 async def get_naming_convention(convention_type: str) -> str:
@@ -3822,3 +5336,30 @@ class NebulaStandardsTool(BaseTool):
                 命名规范速查表
             """
             return await get_naming_convention(convention_type)
+
+        @mcp.tool()
+        async def check_table_name(table_name: str) -> str:
+            """
+            检查数据库表名是否符合 Nebula 中台规范
+
+            Args:
+                table_name: 表名
+
+            Returns:
+                检查结果和建议
+            """
+            return await check_table_name(table_name)
+
+        @mcp.tool()
+        async def check_configuration(config_content: str, config_type: str) -> str:
+            """
+            检查配置文件是否符合 Nebula 中台规范
+
+            Args:
+                config_content: 配置内容
+                config_type: 配置类型（yml、properties）
+
+            Returns:
+                检查结果和建议
+            """
+            return await check_configuration(config_content, config_type)

@@ -19,7 +19,9 @@
 - **API 设计规范**：OpenAPI v3 注解、请求参数、响应体
 - **异常处理规范**：异常体系、错误码、全局异常处理
 - **常量和枚举规范**：常量类、枚举类、使用场景
-- **其他规范**：MyBatis Plus、缓存、代码风格
+- **数据库设计规范**：表命名、字段命名、必选字段、主键规范、雪花算法配置
+- **配置管理规范**：配置文件结构、环境配置、敏感配置管理
+- **其他规范**：MyBatis Plus、缓存、代码风格、JavaDoc 规范
 
 #### 2. 命名规范检查
 检查代码是否符合 Nebula 命名规范：
@@ -244,6 +246,8 @@ curl -X POST http://localhost:8000/mcp \
 | `suggest_nebula_package_structure` | 根据模块类型建议 Nebula 中台的包结构 | `module_type` (str) |
 | `get_nebula_layer_responsibilities` | 获取 Nebula 中台分层职责说明 | `layer` (str) |
 | `get_nebula_naming_convention` | 获取 Nebula 中台命名规范速查表 | `convention_type` (str) |
+| `check_table_name` | 检查数据库表名是否符合 Nebula 中台规范 | `table_name` (str) |
+| `check_configuration` | 检查配置文件是否符合 Nebula 中台规范 | `config_content` (str), `config_type` (str) |
 
 ## 开发说明
 
