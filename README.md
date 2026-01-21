@@ -123,7 +123,12 @@ docker build -t nebula-mcp .
 
 # 运行容器
 docker run -p 8000:8000 nebula-mcp
+
+# 查看容器健康状态
+docker ps
 ```
+
+容器包含健康检查配置，Docker 会每 30 秒自动检查一次服务状态。容器启动后 5 秒开始首次健康检查。
 
 **方式三：指定主机和端口**
 
@@ -135,7 +140,27 @@ uv run python main.py --host 0.0.0.0 --port 8080
 ### 4. 访问服务
 
 - Streamable HTTP 端点: `http://localhost:8000/mcp`
+- 健康检查端点: `http://localhost:8000/health`
 - 根路径: `http://localhost:8000/`
+
+#### 健康检查
+
+使用健康检查端点验证服务是否正常运行：
+
+```bash
+curl http://localhost:8000/health
+```
+
+预期响应：
+
+```json
+{
+  "status": "healthy",
+  "service": "nebula-tools",
+  "transport": "streamable-http",
+  "version": "0.1.0"
+}
+```
 
 ## 使用示例
 

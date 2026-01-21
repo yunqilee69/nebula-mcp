@@ -5,6 +5,8 @@ nebula MCP Server
 
 from mcp.server.fastmcp import FastMCP
 from tools import register_all_tools
+from starlette.responses import JSONResponse
+from starlette.requests import Request
 
 # 创建 FastMCP 实例
 mcp = FastMCP(
@@ -16,6 +18,19 @@ mcp = FastMCP(
 
 # 注册所有工具
 register_all_tools(mcp)
+
+
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(request: Request) -> JSONResponse:
+    """Health check endpoint to verify server is running"""
+    return JSONResponse(
+        {
+            "status": "healthy",
+            "service": "nebula-tools",
+            "transport": "streamable-http",
+            "version": "0.1.0",
+        }
+    )
 
 
 if __name__ == "__main__":
