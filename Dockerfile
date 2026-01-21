@@ -15,7 +15,7 @@ ENV PYTHONUNBUFFERED=1 \
 RUN pip install uv -i https://pypi.tuna.tsinghua.edu.cn/simple --no-cache-dir
 
 # Copy project files
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock README.md ./
 COPY main.py ./
 COPY tools/ ./tools/
 
