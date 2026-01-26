@@ -594,7 +594,31 @@ void updateUser(UpdateUserCommand cmd);
 void deleteUser(Long id);
 UserDto getById(Long id);
 List<UserDto> listUsers(UserQueryParam param);
-Page<UserDto> pageUsers(UserQueryParam param);
+IPage<UserDto> pageUsers(UserQueryParam param);
+```
+
+---
+
+### 分页查询返回类型规范
+
+**Service层分页查询必须返回 `IPage<T>` 类型**：
+
+- **T的类型**：根据业务场景确定，通常为 DTO 或 Entity
+- **常见场景**：
+  - 单表查询：`IPage<Entity>`（直接返回实体）
+  - 多表联查：`IPage<Dto>`（返回数据传输对象）
+  - 自定义字段：`IPage<Dto>`（返回包含自定义字段的数据传输对象）
+
+**示例**：
+```java
+// 单表查询，返回 Entity
+IPage<UserEntity> pageUsersByCondition(UserPageParam param);
+
+// 多表联查，返回 DTO
+IPage<UserDetailDto> pageUsersWithRoles(UserPageParam param);
+
+// 自定义字段统计，返回 DTO
+IPage<UserStatDto> pageUserStatistics(UserStatPageParam param);
 ```
 
 ---
@@ -1086,12 +1110,12 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public Page<UserDto> pageUsers(UserQueryParam param) {
-        Page<UserEntity> page = userRepo.pageByParam(param);
+    public IPage<UserDto> pageUsers(UserQueryParam param) {
+        IPage<UserEntity> page = userRepo.pageByParam(param);
 
         List<UserDto> dtos = UserConverter.INSTANCE.toDtoList(page.getRecords());
 
-        Page<UserDto> result = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        IPage<UserDto> result = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         result.setRecords(dtos);
 
         return result;
@@ -1405,7 +1429,7 @@ public interface UserMapper extends BaseMapper<UserEntity> {
     /**
      * 根据条件分页查询
      */
-    Page<UserEntity> pageByParam(Page<UserEntity> page, UserQueryParam param);
+    IPage<UserEntity> pageByParam(IPage<UserEntity> page, UserQueryParam param);
 
     /**
      * 统计数量
@@ -1456,7 +1480,7 @@ UserLoginStatDto selectLoginStat(LocalDate startDate, LocalDate endDate);
 | `find*` | `List<T>` | 查询多个实体 |
 | `get*` | `T` | 查询单个实体 |
 | `getOpt*` | `Optional<T>` | 查询单个实体（Optional） |
-| `page*` | `Page<T>` | 分页查询 |
+| `page*` | `IPage<T>` | 分页查询 |
 | `count*` | `Long` | 统计数量 |
 | `exists*` | `boolean` | 判断是否存在 |
 
@@ -1468,9 +1492,33 @@ UserLoginStatDto selectLoginStat(LocalDate startDate, LocalDate endDate);
 List<UserEntity> findByUsername(String username);
 UserEntity getById(Long id);
 Optional<UserEntity> getOptById(Long id);
-Page<UserEntity> pageQuery(Page<UserEntity> page, UserQueryParam param);
+IPage<UserEntity> pageQuery(IPage<UserEntity> page, UserQueryParam param);
 Long countByStatus(Integer status);
 boolean existsByUsername(String username);
+```
+
+---
+
+### 分页查询返回类型规范
+
+**DAO层分页查询必须返回 `IPage<T>` 类型**：
+
+- **T的类型**：根据业务场景确定，通常为 Entity 或 DTO
+- **常见场景**：
+  - 单表查询：`IPage<Entity>`（返回实体）
+  - 多表联查：`IPage<Dto>`（返回数据传输对象）
+  - 自定义字段：`IPage<Dto>`（返回包含自定义字段的数据传输对象）
+
+**示例**：
+```java
+// 单表分页查询，返回 Entity
+IPage<UserEntity> pageByCondition(IPage<UserEntity> page, UserQueryParam param);
+
+// 多表联查分页，返回 DTO
+IPage<UserDetailDto> pageWithRoles(IPage<UserDetailDto> page, UserQueryParam param);
+
+// 自定义字段分页，返回 DTO
+IPage<UserStatDto> pageStatistics(IPage<UserStatDto> page, UserStatQueryParam param);
 ```
 
 ---
@@ -1591,7 +1639,7 @@ wrapper.eq(UserEntity::getUsername, "zhangsan");
 List<UserEntity> list = userMapper.selectList(wrapper);
 
 // 分页查询
-Page<UserEntity> page = new Page<>(1, 10);
+IPage<UserEntity> page = new Page<>(1, 10);
 userMapper.selectPage(page, wrapper);
 ```
 
