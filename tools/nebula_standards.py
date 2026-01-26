@@ -1479,6 +1479,212 @@ public class OrderServiceImpl implements IOrderService {
     }
 }
 ```
+
+---
+
+## 数据库查询规范
+
+### Service 层禁止使用 LambdaQueryWrapper
+
+**规则**：Service 层**禁止**使用 `LambdaQueryWrapper` 拼接查询条件，所有数据库查询必须通过 DAO 层提供的方法进行。
+
+---
+
+### 原因说明
+
+1. **代码重复**：如果在 Service 层使用 `LambdaQueryWrapper`，相同的查询逻辑会在多个 Service 类中重复出现
+2. **不利于复用**：查询逻辑封装在 Service 层，其他 Service 无法复用
+3. **职责不清**：数据库查询属于 DAO 层职责，Service 层应关注业务逻辑
+4. **测试困难**：查询条件分散在 Service 层，难以进行单元测试和集成测试
+5. **维护成本高**：查询条件变更时需要修改多处 Service 代码
+
+---
+
+### 错误示例（Service 层使用 LambdaQueryWrapper）
+
+```java
+@Service
+public class UserServiceImpl implements IUserService {
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Override
+    public List<UserDto> listUsers(ListUsersQuery query) {
+        // ❌ 错误：在 Service 层直接使用 LambdaQueryWrapper
+        LambdaQueryWrapper<UserEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserEntity::getStatus, query.getStatus());
+        wrapper.like(UserEntity::getUsername, query.getUsername());
+        wrapper.ge(UserEntity::getCreateTime, query.getStartDate());
+        wrapper.le(UserEntity::getCreateTime, query.getEndDate());
+        List<UserEntity> list = userMapper.selectList(wrapper);
+
+        return UserConverter.INSTANCE.toDtoList(list);
+    }
+
+    @Override
+    public UserDto getByUsername(String username) {
+        // ❌ 错误：在 Service 层直接使用 LambdaQueryWrapper
+        LambdaQueryWrapper<UserEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserEntity::getUsername, username);
+        UserEntity entity = userMapper.selectOne(wrapper);
+
+        return UserConverter.INSTANCE.toDto(entity);
+    }
+}
+```
+
+**问题**：
+- 查询逻辑写在 Service 层，其他 Service 无法复用
+- 相同的查询条件可能在多处重复编写
+- 违反分层架构原则
+
+---
+
+### 正确示例（调用 DAO 层提供的方法）
+
+```java
+// DAO 层：提供查询方法
+public interface UserMapper extends BaseMapper<UserEntity> {
+
+    /**
+     * 根据条件查询用户列表
+     */
+    List<UserEntity> listByParam(UserQueryParam param);
+
+    /**
+     * 根据用户名查询
+     */
+    UserEntity findByUsername(String username);
+}
+```
+
+```java
+// Service 层：调用 DAO 层方法
+@Service
+public class UserServiceImpl implements IUserService {
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Override
+    public List<UserDto> listUsers(ListUsersQuery query) {
+        // ✅ 正确：调用 DAO 层提供的方法
+        UserQueryParam param = UserConverter.INSTANCE.toParam(query);
+        List<UserEntity> list = userMapper.listByParam(param);
+
+        return UserConverter.INSTANCE.toDtoList(list);
+    }
+
+    @Override
+    public UserDto getByUsername(String username) {
+        // ✅ 正确：调用 DAO 层提供的方法
+        UserEntity entity = userMapper.findByUsername(username);
+
+        return UserConverter.INSTANCE.toDto(entity);
+    }
+}
+```
+
+**优势**：
+- 查询逻辑封装在 DAO 层，可被多个 Service 复用
+- 职责清晰：DAO 负责查询，Service 负责业务逻辑
+- 易于测试和维护
+- 查询条件变更时只需修改 DAO 层
+
+---
+
+### 特殊情况说明
+
+**MyBatis Plus 提供的通用方法（可直接调用）**：
+
+以下 MyBatis Plus 提供的基础 CRUD 方法，Service 层可以直接调用：
+
+```java
+@Service
+public class UserServiceImpl implements IUserService {
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Override
+    public UserDto getById(GetUserByIdQuery query) {
+        // ✅ 正确：调用 MyBatis Plus 基础方法
+        UserEntity entity = userMapper.selectById(query.getId());
+        return UserConverter.INSTANCE.toDto(entity);
+    }
+
+    @Override
+    @Transactional
+    public Long createUser(CreateUserCommand cmd) {
+        // ✅ 正确：调用 MyBatis Plus 基础方法
+        UserEntity entity = new UserEntity();
+        entity.setUsername(cmd.getUsername());
+        entity.setEmail(cmd.getEmail());
+        userMapper.insert(entity);
+
+        return entity.getId();
+    }
+}
+```
+
+**允许直接调用的基础方法**：
+- `selectById(id)` - 根据 ID 查询
+- `insert(entity)` - 插入
+- `updateById(entity)` - 根据 ID 更新
+- `deleteById(id)` - 根据 ID 删除
+- `selectList(null)` - 查询所有
+
+**禁止在 Service 层使用的方法**：
+- `selectList(LambdaQueryWrapper)` - 条件查询
+- `selectOne(LambdaQueryWrapper)` - 单个条件查询
+- `selectPage(IPage, LambdaQueryWrapper)` - 分页条件查询
+- `selectCount(LambdaQueryWrapper)` - 统计数量
+- 其他任何使用 `LambdaQueryWrapper` 的方法
+
+---
+
+### DAO 层查询方法封装建议
+
+**常见查询方法命名模式**：
+
+| 场景 | 方法名 | 返回类型 | 示例 |
+|-------|---------|---------|------|
+| 单个条件查询 | `findBy{Field}` | `Entity` | `findByUsername(String username)` |
+| 多个条件查询 | `listByParam(Param)` | `List<Entity>` | `listByParam(UserQueryParam param)` |
+| 条件分页查询 | `pageByParam(Page, Param)` | `IPage<Entity>` | `pageByParam(IPage page, UserQueryParam param)` |
+| 存在性检查 | `existsBy{Field}` | `boolean` | `existsByUsername(String username)` |
+| 统计查询 | `countBy{Condition}` | `Long` | `countByStatus(Integer status)` |
+
+**实现建议**：
+
+```java
+public interface UserMapper extends BaseMapper<UserEntity> {
+
+    // 1. 简单条件查询（参数 <= 3 个）
+    UserEntity findByUsername(String username);
+    boolean existsByUsername(String username);
+
+    // 2. 复杂条件查询（参数 > 3 个，封装为 Param）
+    List<UserEntity> listByParam(UserQueryParam param);
+    IPage<UserEntity> pageByParam(IPage<UserEntity> page, UserQueryParam param);
+
+    // 3. 统计查询
+    Long countByStatus(Integer status);
+}
+```
+
+---
+
+### 最佳实践总结
+
+1. **Service 层不拼接查询条件**：所有查询条件封装通过 Param 传递给 DAO 层
+2. **DAO 层提供完整查询方法**：包括简单查询、复杂查询、分页查询、统计查询
+3. **使用 Param 类传递查询参数**：查询参数超过 3 个时，封装为 Param 类
+4. **复用 DAO 层方法**：相同的查询逻辑在 DAO 层实现一次，多个 Service 共享
+5. **保持分层清晰**：Service 层专注业务逻辑，DAO 层专注数据访问
+
+---
 """
 
 # ==============================================================================
@@ -1702,6 +1908,208 @@ public class BasePageParam {
 
 ## MyBatis Plus 使用
 
+### Service 层禁止使用 LambdaQueryWrapper
+
+**规则**：Service 层**禁止**使用 `LambdaQueryWrapper` 拼接查询条件，所有数据库查询必须通过 DAO 层提供的方法进行。
+
+---
+
+### 原因说明
+
+1. **代码重复**：如果在 Service 层使用 `LambdaQueryWrapper`，相同的查询逻辑会在多个 Service 类中重复出现
+2. **不利于复用**：查询逻辑封装在 Service 层，其他 Service 无法复用
+3. **职责不清**：数据库查询属于 DAO 层职责，Service 层应关注业务逻辑
+4. **测试困难**：查询条件分散在 Service 层，难以进行单元测试和集成测试
+5. **维护成本高**：查询条件变更时需要修改多处 Service 代码
+
+---
+
+### 错误示例（Service 层使用 LambdaQueryWrapper）
+
+```java
+@Service
+public class UserServiceImpl implements IUserService {
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Override
+    public List<UserDto> listUsers(ListUsersQuery query) {
+        // ❌ 错误：在 Service 层直接使用 LambdaQueryWrapper
+        LambdaQueryWrapper<UserEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserEntity::getStatus, query.getStatus());
+        wrapper.like(UserEntity::getUsername, query.getUsername());
+        wrapper.ge(UserEntity::getCreateTime, query.getStartDate());
+        wrapper.le(UserEntity::getCreateTime, query.getEndDate());
+        List<UserEntity> list = userMapper.selectList(wrapper);
+
+        return UserConverter.INSTANCE.toDtoList(list);
+    }
+
+    @Override
+    public UserDto getByUsername(String username) {
+        // ❌ 错误：在 Service 层直接使用 LambdaQueryWrapper
+        LambdaQueryWrapper<UserEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserEntity::getUsername, username);
+        UserEntity entity = userMapper.selectOne(wrapper);
+
+        return UserConverter.INSTANCE.toDto(entity);
+    }
+}
+```
+
+**问题**：
+- 查询逻辑写在 Service 层，其他 Service 无法复用
+- 相同的查询条件可能在多处重复编写
+- 违反分层架构原则
+
+---
+
+### 正确示例（调用 DAO 层提供的方法）
+
+```java
+// DAO 层：提供查询方法
+public interface UserMapper extends BaseMapper<UserEntity> {
+
+    /**
+     * 根据条件查询用户列表
+     */
+    List<UserEntity> listByParam(UserQueryParam param);
+
+    /**
+     * 根据用户名查询
+     */
+    UserEntity findByUsername(String username);
+}
+```
+
+```java
+// Service 层：调用 DAO 层方法
+@Service
+public class UserServiceImpl implements IUserService {
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Override
+    public List<UserDto> listUsers(ListUsersQuery query) {
+        // ✅ 正确：调用 DAO 层提供的方法
+        UserQueryParam param = UserConverter.INSTANCE.toParam(query);
+        List<UserEntity> list = userMapper.listByParam(param);
+
+        return UserConverter.INSTANCE.toDtoList(list);
+    }
+
+    @Override
+    public UserDto getByUsername(String username) {
+        // ✅ 正确：调用 DAO 层提供的方法
+        UserEntity entity = userMapper.findByUsername(username);
+
+        return UserConverter.INSTANCE.toDto(entity);
+    }
+}
+```
+
+**优势**：
+- 查询逻辑封装在 DAO 层，可被多个 Service 复用
+- 职责清晰：DAO 负责查询，Service 负责业务逻辑
+- 易于测试和维护
+- 查询条件变更时只需修改 DAO 层
+
+---
+
+### 特殊情况说明
+
+**MyBatis Plus 提供的通用方法（可直接调用）**：
+
+以下 MyBatis Plus 提供的基础 CRUD 方法，Service 层可以直接调用：
+
+```java
+@Service
+public class UserServiceImpl implements IUserService {
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Override
+    public UserDto getById(GetUserByIdQuery query) {
+        // ✅ 正确：调用 MyBatis Plus 基础方法
+        UserEntity entity = userMapper.selectById(query.getId());
+        return UserConverter.INSTANCE.toDto(entity);
+    }
+
+    @Override
+    @Transactional
+    public Long createUser(CreateUserCommand cmd) {
+        // ✅ 正确：调用 MyBatis Plus 基础方法
+        UserEntity entity = new UserEntity();
+        entity.setUsername(cmd.getUsername());
+        entity.setEmail(cmd.getEmail());
+        userMapper.insert(entity);
+
+        return entity.getId();
+    }
+}
+```
+
+**允许直接调用的基础方法**：
+- `selectById(id)` - 根据 ID 查询
+- `insert(entity)` - 插入
+- `updateById(entity)` - 根据 ID 更新
+- `deleteById(id)` - 根据 ID 删除
+- `selectList(null)` - 查询所有
+
+**禁止在 Service 层使用的方法**：
+- `selectList(LambdaQueryWrapper)` - 条件查询
+- `selectOne(LambdaQueryWrapper)` - 单个条件查询
+- `selectPage(IPage, LambdaQueryWrapper)` - 分页条件查询
+- `selectCount(LambdaQueryWrapper)` - 统计数量
+- 其他任何使用 `LambdaQueryWrapper` 的方法
+
+---
+
+### DAO 层查询方法封装建议
+
+**常见查询方法命名模式**：
+
+| 场景 | 方法名 | 返回类型 | 示例 |
+|-------|---------|---------|------|
+| 单个条件查询 | `findBy{Field}` | `Entity` | `findByUsername(String username)` |
+| 多个条件查询 | `listByParam(Param)` | `List<Entity>` | `listByParam(UserQueryParam param)` |
+| 条件分页查询 | `pageByParam(Page, Param)` | `IPage<Entity>` | `pageByParam(IPage page, UserQueryParam param)` |
+| 存在性检查 | `existsBy{Field}` | `boolean` | `existsByUsername(String username)` |
+| 统计查询 | `countBy{Condition}` | `Long` | `countByStatus(Integer status)` |
+
+**实现建议**：
+
+```java
+public interface UserMapper extends BaseMapper<UserEntity> {
+
+    //1. 简单条件查询（参数 <= 3 个）
+    UserEntity findByUsername(String username);
+    boolean existsByUsername(String username);
+
+    //2. 复杂条件查询（参数 > 3 个，封装为 Param）
+    List<UserEntity> listByParam(UserQueryParam param);
+    IPage<UserEntity> pageByParam(IPage<UserEntity> page, UserQueryParam param);
+
+    //3. 统计查询
+    Long countByStatus(Integer status);
+}
+```
+
+---
+
+### 最佳实践总结
+
+1. **Service 层不拼接查询条件**：所有查询条件封装通过 Param 传递给 DAO 层
+2. **DAO 层提供完整查询方法**：包括简单查询、复杂查询、分页查询、统计查询
+3. **使用 Param 类传递查询参数**：查询参数超过 3 个时，封装为 Param 类
+4. **复用 DAO 层方法**：相同的查询逻辑在 DAO 层实现一次，多个 Service 共享
+5. **保持分层清晰**：Service 层专注业务逻辑，DAO 层专注数据访问
+
+---
+
 ### IService 使用
 
 推荐使用 MyBatis Plus 提供的 `IService`：
@@ -1739,16 +2147,9 @@ UserEntity entity = userMapper.selectById(id);
 
 // 查询所有
 List<UserEntity> list = userMapper.selectList(null);
-
-// 条件查询
-LambdaQueryWrapper<UserEntity> wrapper = new LambdaQueryWrapper<>();
-wrapper.eq(UserEntity::getUsername, "zhangsan");
-List<UserEntity> list = userMapper.selectList(wrapper);
-
-// 分页查询
-IPage<UserEntity> page = new Page<>(1, 10);
-userMapper.selectPage(page, wrapper);
 ```
+
+**注意**：条件查询必须在 DAO 层封装，Service 层禁止使用 `LambdaQueryWrapper`。
 
 ---
 
