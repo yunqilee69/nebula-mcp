@@ -12,7 +12,7 @@ from starlette.requests import Request
 mcp = FastMCP(
     name="nebula-tools",
     instructions="提供 Nebula 中台 Java 后端编码规范等开发工具的 MCP 服务",
-    host="0.0.0.0",
+    host="127.0.0.1",
     port=8000,
 )
 
