@@ -592,9 +592,9 @@ boolean existsByUsername(String username);
 Long createUser(CreateUserCommand cmd);
 void updateUser(UpdateUserCommand cmd);
 void deleteUser(Long id);
-UserDto getById(Long id);
-List<UserDto> listUsers(UserQueryParam param);
-IPage<UserDto> pageUsers(UserQueryParam param);
+UserDto getById(GetUserByIdQuery query);
+List<UserDto> listUsers(ListUsersQuery query);
+IPage<UserDto> pageUsers(PageUsersQuery query);
 ```
 
 ---
@@ -839,8 +839,9 @@ public UserResp getUserById(@PathVariable Long id) {
 ```java
 @Operation(summary = "查询用户列表", description = "根据条件查询用户列表")
 @GetMapping
-public List<UserResp> listUsers(UserQueryParam param) {
-    List<UserDto> dtos = userService.listUsers(param);
+public List<UserResp> listUsers(ListUsersReq req) {
+    ListUsersQuery query = UserConverter.INSTANCE.toQuery(req);
+    List<UserDto> dtos = userService.listUsers(query);
 
     return UserConverter.INSTANCE.toRespList(dtos);
 }
@@ -852,8 +853,9 @@ public List<UserResp> listUsers(UserQueryParam param) {
 ```java
 @Operation(summary = "分页查询用户", description = "分页查询用户列表")
 @GetMapping("/page")
-public PageResp<UserResp> pageUsers(UserQueryParam param) {
-    Page<UserDto> page = userService.pageUsers(param);
+public PageResp<UserResp> pageUsers(PageUsersReq req) {
+    PageUsersQuery query = UserConverter.INSTANCE.toQuery(req);
+    Page<UserDto> page = userService.pageUsers(query);
 
     PageResp<UserResp> resp = new PageResp<>();
     resp.setRecords(UserConverter.INSTANCE.toRespList(page.getRecords()));
@@ -1009,8 +1011,8 @@ public interface IUserService {
     void updateUser(UpdateUserCommand cmd);
     void deleteUser(Long id);
     UserDto getById(GetUserByIdQuery query);
-    List<UserDto> listUsers(UserQueryParam param);
-    Page<UserDto> pageUsers(UserQueryParam param);
+    List<UserDto> listUsers(ListUsersQuery query);
+    Page<UserDto> pageUsers(PageUsersQuery query);
 }
 ```
 
@@ -1103,14 +1105,18 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public List<UserDto> listUsers(UserQueryParam param) {
+    public List<UserDto> listUsers(ListUsersQuery query) {
+        // 将 Query 转换为 Param 传给 DAO 层
+        UserQueryParam param = UserConverter.INSTANCE.toParam(query);
         List<UserEntity> entities = userRepo.listByParam(param);
 
         return UserConverter.INSTANCE.toDtoList(entities);
     }
 
     @Override
-    public IPage<UserDto> pageUsers(UserQueryParam param) {
+    public IPage<UserDto> pageUsers(PageUsersQuery query) {
+        // 将 Query 转换为 Param 传给 DAO 层
+        UserQueryParam param = UserConverter.INSTANCE.toParam(query);
         IPage<UserEntity> page = userRepo.pageByParam(param);
 
         List<UserDto> dtos = UserConverter.INSTANCE.toDtoList(page.getRecords());
@@ -1184,6 +1190,107 @@ public class UserInternalService {
         }
     }
 }
+```
+
+---
+
+## 方法签名规范
+
+### 基本规则
+
+**Service 层方法签名中不能使用 Entity，只能使用 DTO、Command、Query 类。**
+
+---
+
+### 原因说明
+
+1. **解耦数据模型**：Entity 是数据库映射对象，属于 DAO 层内部实现，不应暴露到 Service 层
+2. **清晰的职责边界**：Service 层应关注业务对象（DTO/Command/Query），而非持久化对象（Entity）
+3. **便于维护和扩展**：当数据库表结构变更时，仅需修改 Entity，不影响 Service 层接口
+4. **避免数据泄露**：Entity 可能包含敏感字段或内部字段，不应直接暴露给上层
+
+---
+
+### 正确示例
+
+```java
+public interface IUserService {
+    // ✅ 正确：使用 Command 作为入参
+    Long createUser(CreateUserCommand cmd);
+
+    // ✅ 正确：使用 Query 作为入参
+    UserDto getById(GetUserByIdQuery query);
+
+    // ✅ 正确：使用 Query 作为查询参数
+    List<UserDto> listUsers(ListUsersQuery query);
+
+    // ✅ 正确：使用 Query 作为查询参数
+    IPage<UserDto> pageUsers(PageUsersQuery query);
+}
+```
+
+---
+
+### 错误示例
+
+```java
+public interface IUserService {
+    // ❌ 错误：方法参数不能使用 Entity
+    Long createUser(UserEntity entity);
+
+    // ❌ 错误：方法返回值不能使用 Entity
+    UserEntity getById(Long id);
+
+    // ❌ 错误：方法参数不能使用 Entity
+    void updateUser(UserEntity entity);
+
+    // ❌ 错误：方法返回值不能使用 Entity
+    List<UserEntity> listUsers();
+}
+```
+
+---
+
+### Internal Service 可以使用 Entity
+
+Internal Service（内部服务）是 Service 层内部的辅助类，可以使用 Entity：
+
+```java
+@Service
+public class UserInternalService {
+
+    /**
+     * 校验用户状态
+     */
+    public void validateUserStatus(Long userId) {
+        // ✅ Internal Service 内部可以使用 Entity
+        UserEntity entity = userRepo.getById(userId);
+        if (entity == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        if (entity.getStatus() == UserStatusEnum.LOCKED) {
+            throw new BusinessException(ErrorCode.USER_LOCKED);
+        }
+    }
+}
+```
+
+---
+
+### 数据转换规范
+
+| 层 | 入参类型 | 返回类型 |
+|----|---------|---------|
+| **Controller** | Req (local/model/req/) | Resp (local/model/resp/) |
+| **Service** | Command/Query (core/model/) | DTO (core/model/dto/) |
+| **DAO** | Entity/Param (core/model/) | Entity/DTO (core/model/) |
+
+**数据流转**：
+```
+Controller: Req → Command/Query → Service
+Service: Command/Query → Entity (内部) → DTO → Controller
+DAO: Entity/Param ↔ 数据库
 ```
 
 ---
@@ -1705,8 +1812,8 @@ nebula:
 @Service
 public class UserServiceImpl implements IUserService {
 
-    @Cacheable(value = "user", key = "#id", unless = "#result == null")
-    public UserDto getById(Long id) {
+    @Cacheable(value = "user", key = "#query.id", unless = "#result == null")
+    public UserDto getById(GetUserByIdQuery query) {
         // ...
     }
 }
@@ -1716,7 +1823,7 @@ public class UserServiceImpl implements IUserService {
 
 ### 缓存 Key 命名
 
-```
+```java
 user:id:123
 user:username:zhangsan
 config:system
@@ -2169,8 +2276,9 @@ public class UserQueryParam extends BasePageParam {
 
 ```java
 @GetMapping("/page")
-public PageResp<UserResp> pageUsers(UserQueryParam param) {
-    Page<UserDto> page = userService.pageUsers(param);
+public PageResp<UserResp> pageUsers(PageUsersReq req) {
+    PageUsersQuery query = UserConverter.INSTANCE.toQuery(req);
+    Page<UserDto> page = userService.pageUsers(query);
 
     PageResp<UserResp> resp = new PageResp<>();
     resp.setRecords(UserConverter.INSTANCE.toRespList(page.getRecords()));
@@ -2854,8 +2962,8 @@ nebula:
 @Service
 public class UserServiceImpl implements IUserService {
 
-    @Cacheable(value = "user", key = "#id", unless = "#result == null")
-    public UserDto getById(Long id) {
+    @Cacheable(value = "user", key = "#query.id", unless = "#result == null")
+    public UserDto getById(GetUserByIdQuery query) {
         // ...
     }
 }
@@ -2876,10 +2984,10 @@ config:system
 ### 自定义缓存过期时间
 
 ```java
-@Cacheable(value = "user", key = "#id",
+@Cacheable(value = "user", key = "#query.id",
            unless = "#result == null",
            cacheResolver = "customCacheResolver")
-public UserDto getById(Long id) {
+public UserDto getById(GetUserByIdQuery query) {
     // ...
 }
 ```
